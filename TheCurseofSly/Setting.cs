@@ -5,7 +5,7 @@ using System.Text;
 using Modding;
 namespace TheCurseofSly
 {
-     public class Setting:ModSettings
+     public class Setting
     {
         public bool IsHard = false;
         public bool immediateltDie = true;

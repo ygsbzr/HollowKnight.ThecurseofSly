@@ -7,18 +7,18 @@ using UnityEngine;
 using GlobalEnums;
 namespace TheCurseofSly
 {
-    public class CurseofSly:Mod,ITogglableMod
+    public class CurseofSly:Mod,ITogglableMod,IGlobalSettings<Setting>
     {
         public GameObject SmallGeo => UnityEngine.Object.Instantiate(_smallGeo);
         public override string GetVersion()
         {
-            return "1.0";
+            return "2.0(FOR1.5)";
         }
         public override void Initialize()
         {
-            ModHooks.Instance.NewGameHook += NewStart;
-            ModHooks.Instance.AfterSavegameLoadHook += Load;
-            ModHooks.Instance.BeforePlayerDeadHook += Instance_BeforePlayerDeadHook;
+            ModHooks.NewGameHook += NewStart;
+            ModHooks.AfterSavegameLoadHook += Load;
+            ModHooks.BeforePlayerDeadHook += Instance_BeforePlayerDeadHook;
             On.GeoControl.OnEnable += GeoControl_OnEnable;
             GetPrefab();
             On.HealthManager.TakeDamage += Count;
@@ -86,14 +86,14 @@ namespace TheCurseofSly
             hitCount = 0;
             if(mysetting.IsHard)
             {
-                maxhit = 6;
+                maxhit = 3;
                 On.GeoCounter.AddGeo += Death;
                 On.GeoControl.OnTriggerEnter2D += Col;
                 Log("Hard");
             }
             else
             {
-                maxhit = 10;
+                maxhit = 6;
                 On.GeoControl.OnTriggerEnter2D += Col;
                 Log("Easy");
             }
@@ -120,7 +120,7 @@ namespace TheCurseofSly
         {
             if (collision.gameObject.name == "HeroBox")//Knight contact with geo
             {
-                HeroController.instance.TakeGeo(PlayerData.instance.geo);//geo become 0
+                PlayerData.instance.geo = 0;
                 if(mysetting.immediateltDie)
                 {
                     HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 9999, 0);
@@ -142,25 +142,28 @@ namespace TheCurseofSly
 
         private void Death(On.GeoCounter.orig_AddGeo orig, GeoCounter self, int geo)
         {
-            geo = 0;
-            if (mysetting.immediateltDie)
+            if(geo!=0)
             {
-                HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 9999, 0);
+                if (mysetting.immediateltDie)
+                {
+                    HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 9999, 0);
+                }
+                else
+                {
+                    HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 2, 0);
+                }
             }
-            else
-            {
-                HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 2, 0);
-            }
-            orig(self, geo);
+            orig(self, 0);
         }
 
-        private Setting mysetting = new Setting();
-        public override ModSettings GlobalSettings { get =>mysetting ; set => mysetting=(Setting)value; }
+       public static Setting mysetting { get; set; } = new Setting();
+        public void OnLoadGlobal(Setting s) => mysetting = s;
+        public Setting OnSaveGlobal() => mysetting;
         public void Unload()
         {
-            ModHooks.Instance.NewGameHook -= NewStart;
-            ModHooks.Instance.AfterSavegameLoadHook -= Load;
-            ModHooks.Instance.BeforePlayerDeadHook -= Instance_BeforePlayerDeadHook;
+            ModHooks.NewGameHook -= NewStart;
+            ModHooks.AfterSavegameLoadHook -= Load;
+            ModHooks.BeforePlayerDeadHook -= Instance_BeforePlayerDeadHook;
             On.GeoControl.OnTriggerEnter2D -= Col;
             On.GeoCounter.AddGeo -= Death;
             On.GeoControl.OnEnable -= GeoControl_OnEnable;
