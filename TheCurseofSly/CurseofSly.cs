@@ -86,14 +86,14 @@ namespace TheCurseofSly
             hitCount = 0;
             if(mysetting.IsHard)
             {
-                maxhit = 10;
+                maxhit = 6;
                 On.GeoCounter.AddGeo += Death;
                 On.GeoControl.OnTriggerEnter2D += Col;
                 Log("Hard");
             }
             else
             {
-                maxhit = 15;
+                maxhit = 10;
                 On.GeoControl.OnTriggerEnter2D += Col;
                 Log("Easy");
             }
@@ -118,24 +118,39 @@ namespace TheCurseofSly
         }
         private void Col(On.GeoControl.orig_OnTriggerEnter2D orig, GeoControl self, UnityEngine.Collider2D collision)
         {
-            if (collision.gameObject.name == "HeroBox")
+            if (collision.gameObject.name == "HeroBox")//Knight contact with geo
             {
-                HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 9999, 0);
+                HeroController.instance.TakeGeo(PlayerData.instance.geo);//geo become 0
+                if(mysetting.immediateltDie)
+                {
+                    HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 9999, 0);
+                }
+                else
+                {
+                    HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 2, 0);
+                }
                 
             }
-            if(collision.gameObject.name=="Slash"&&!HeroController.instance.cState.onGround)
+           /* if(collision.gameObject.name=="Slash"&&!HeroController.instance.cState.onGround)
             {
                 Log("Recoil");
                 Vector2 speed = new Vector2(HeroController.instance.GetComponent<Rigidbody2D>().velocity.x,15.7f);
                 HeroController.instance.GetComponent<Rigidbody2D>().velocity = speed;
-            }
+            }*/
             orig(self, collision);
         }
 
         private void Death(On.GeoCounter.orig_AddGeo orig, GeoCounter self, int geo)
         {
             geo = 0;
-            HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 9999, 0);
+            if (mysetting.immediateltDie)
+            {
+                HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 9999, 0);
+            }
+            else
+            {
+                HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 2, 0);
+            }
             orig(self, geo);
         }
 
@@ -154,6 +169,6 @@ namespace TheCurseofSly
         GameObject _smallGeo;
         int hitCount;
         int maxhit;
-        private readonly List<String> bossNames = new List<String> { "Dream Mage Lord", "Dung Defender", "Fluke Mother", "Ghost Warrior Galien", "Ghost Warrior Hu", "Ghost Warrior Markoth", "Ghost Warrior Marmu", "Ghost Warrior No Eyes", "Ghost Warrior Slug", "Ghost Warrior Xero", "Giant Buzzer Col", "Giant Fly", "Grey Prince", "Grimm Boss", "Head", "Hive Knight", "Hornet Boss 1", "Hornet Boss 2", "Infected Knight", "Jar Collector", "Jellyfish GG(Clone)", "Lancer", "Lobster", "Lost Kin", "Mage Knight", "Mage Lord", "Mantis Lord", "Mantis Lord S1", "Mantis Lord S2", "Mantis Traitor Lord", "Mawlek Body", "Mega Fat Bee", "Mega Fat Bee (1)", "Mega Zombie Beam Miner (1)", "Mimic Spider", "Nightmare Grimm Boss", "Radiance", "White Defender", "Zombie Beam Miner Rematch", "Hollow Knight Boss", "Mega Jellyfish","HK Prime" ,"Absolute Radiance","Sly Boss","Mato","Oro","Sheo Boss","Hornet Nosk"};
+        private readonly List<String> bossNames = new List<String> { "Dream Mage Lord", "Dung Defender", "Fluke Mother", "Ghost Warrior Galien", "Ghost Warrior Hu", "Ghost Warrior Markoth", "Ghost Warrior Marmu", "Ghost Warrior No Eyes", "Ghost Warrior Slug", "Ghost Warrior Xero", "Giant Buzzer Col", "Giant Fly", "Grey Prince", "Grimm Boss", "Head", "Hive Knight", "Hornet Boss 1", "Hornet Boss 2", "Infected Knight", "Jar Collector", "Jellyfish GG(Clone)", "Lancer", "Lobster", "Lost Kin", "Mage Knight", "Mage Lord", "Mantis Lord", "Mantis Lord S1", "Mantis Lord S2", "Mantis Traitor Lord", "Mawlek Body", "Mega Fat Bee", "Mega Fat Bee (1)", "Mega Zombie Beam Miner (1)", "Mimic Spider", "Nightmare Grimm Boss", "Radiance", "White Defender", "Zombie Beam Miner Rematch", "Hollow Knight Boss", "Mega Jellyfish","HK Prime" ,"Absolute Radiance","Sly Boss","Mato","Oro","Sheo Boss","Hornet Nosk","Hollow Knight Boss"};
     }
 }

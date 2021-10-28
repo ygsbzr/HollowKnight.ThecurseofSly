@@ -8,5 +8,6 @@ namespace TheCurseofSly
      public class Setting:ModSettings
     {
         public bool IsHard = false;
+        public bool immediateltDie = true;
     }
 }

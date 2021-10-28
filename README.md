@@ -8,3 +8,5 @@ Compatible with `Hollow Knight`1.4
 
 - `features` (`Object`): Whether to enable specified features.
   + `IsHard` (`Boolean`): Whether you are in hard mode. Defaults to `false`.
+	+`immediatelyDie`(`Boolean`):If it is false,you will get 2 damage instead of dying,Defaults to `true`.
+  
