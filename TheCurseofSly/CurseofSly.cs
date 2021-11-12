@@ -7,12 +7,12 @@ using UnityEngine;
 using GlobalEnums;
 namespace TheCurseofSly
 {
-    public class CurseofSly:Mod,ITogglableMod,IGlobalSettings<Setting>
+    public class CurseofSly:Mod,IGlobalSettings<Setting>,IMenuMod
     {
         public GameObject SmallGeo => UnityEngine.Object.Instantiate(_smallGeo);
         public override string GetVersion()
         {
-            return "2.0(FOR1.5)";
+            return "2.1(FOR1.5)";
         }
         public override void Initialize()
         {
@@ -20,24 +20,55 @@ namespace TheCurseofSly
             ModHooks.AfterSavegameLoadHook += Load;
             ModHooks.BeforePlayerDeadHook += Instance_BeforePlayerDeadHook;
             On.GeoControl.OnEnable += GeoControl_OnEnable;
+            On.GeoCounter.AddGeo += Death;
+            On.GeoControl.OnTriggerEnter2D += Col;
             GetPrefab();
             On.HealthManager.TakeDamage += Count;
+        }
+        public bool ToggleButtonInsideMenu => false;
+        public List<IMenuMod.MenuEntry> GetMenuData(IMenuMod.MenuEntry? wrappedToggleButtonEntry)
+        {
+            List<IMenuMod.MenuEntry> menuEntries = new List<IMenuMod.MenuEntry>();
+            menuEntries.Add(
+                new IMenuMod.MenuEntry
+                {
+                    Name="Mode",
+                    Description="Choose the mode(easy/hard)",
+                    Values=Enum.GetNames(typeof(Setting.Mode)).ToArray(),
+                    Saver=i=>GS.mode=(Setting.Mode)i,
+                    Loader=()=>(int)GS.mode
+                }
+                );
+            menuEntries.Add(
+               new IMenuMod.MenuEntry
+               {
+                   Name = "Punishment",
+                   Description = "Choose the punishment when you get geo",
+                   Values = Enum.GetNames(typeof(Setting.PunishmentType)).ToArray(),
+                   Saver = i => GS.punishment = (Setting.PunishmentType)i,
+                   Loader = () => (int)GS.punishment
+               }
+               );
+            return menuEntries;
         }
 
         private void Count(On.HealthManager.orig_TakeDamage orig, HealthManager self, HitInstance hitInstance)
         {
              bool IsBoss = bossNames.Contains(self.gameObject.name);
-            if (IsBoss)
+            if(GS.mode!=Setting.Mode.None)
             {
-                if(hitInstance.AttackType==AttackTypes.Nail)
+                if (IsBoss)
                 {
-
-                    hitCount++;
-
-                    if (hitCount % maxhit == 0)
+                    if (hitInstance.AttackType == AttackTypes.Nail)
                     {
-                        SpawnGeo(self.gameObject.GetComponent<Collider2D>());
-                        hitCount = 0;
+
+                        hitCount++;
+
+                        if (hitCount % maxhit == 0)
+                        {
+                            SpawnGeo(self.gameObject.GetComponent<Collider2D>());
+                            hitCount = 0;
+                        }
                     }
                 }
             }
@@ -47,7 +78,10 @@ namespace TheCurseofSly
         private void GeoControl_OnEnable(On.GeoControl.orig_OnEnable orig, GeoControl self)
         {
             BossSceneController oi = BossSceneController.Instance;
-            BossSceneController.Instance = null;
+            if(GS.mode!=Setting.Mode.None)
+            {
+                BossSceneController.Instance = null;
+            }
             try
             {
                 orig(self);
@@ -73,7 +107,10 @@ namespace TheCurseofSly
         }
         private void Instance_BeforePlayerDeadHook()
         {
-            HeroController.instance.TakeGeo(PlayerData.instance.geo);
+           if(GS.mode!=Setting.Mode.None)
+            {
+                HeroController.instance.TakeGeo(PlayerData.instance.geo);
+            }
         }
 
         private void Load(SaveGameData data)
@@ -83,19 +120,22 @@ namespace TheCurseofSly
 
         private void NewStart()
         {
-            hitCount = 0;
-            if(mysetting.IsHard)
+           if(GS.mode!=Setting.Mode.None)
             {
-                maxhit = 3;
-                On.GeoCounter.AddGeo += Death;
-                On.GeoControl.OnTriggerEnter2D += Col;
-                Log("Hard");
-            }
-            else
-            {
-                maxhit = 6;
-                On.GeoControl.OnTriggerEnter2D += Col;
-                Log("Easy");
+                hitCount = 0;
+                if (GS.mode == Setting.Mode.Hard)
+                {
+                    maxhit = 3;
+                    Log("Hard");
+                }
+                else
+                {
+                    if (GS.mode == Setting.Mode.Easy)
+                    {
+                        maxhit = 6;
+                        Log("Easy");
+                    }
+                }
             }
         }
         private void SpawnGeo(Collider2D collider2D)
@@ -120,14 +160,20 @@ namespace TheCurseofSly
         {
             if (collision.gameObject.name == "HeroBox")//Knight contact with geo
             {
-                PlayerData.instance.geo = 0;
-                if(mysetting.immediateltDie)
+                if(GS.mode!=Setting.Mode.None)
+                {
+                    PlayerData.instance.geo = 0;
+                }
+                if(GS.punishment==Setting.PunishmentType.Die)
                 {
                     HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 9999, 0);
                 }
                 else
                 {
-                    HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 2, 0);
+                    if(GS.punishment==Setting.PunishmentType.Damage)
+                    {
+                        HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 2, 0);
+                    }
                 }
                 
             }
@@ -142,33 +188,38 @@ namespace TheCurseofSly
 
         private void Death(On.GeoCounter.orig_AddGeo orig, GeoCounter self, int geo)
         {
-            if(geo!=0)
+            
+            if(GS.mode==Setting.Mode.Hard)
             {
-                if (mysetting.immediateltDie)
+                PlayerData.instance.geo = 0;
+                if (geo > 50)
                 {
-                    HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 9999, 0);
-                }
-                else
-                {
-                    HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 2, 0);
+                    if (GS.punishment == Setting.PunishmentType.Die)
+                    {
+                        HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 9999, 0);
+                    }
+                    if(GS.punishment == Setting.PunishmentType.Damage)
+                    {
+                        HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 2, 0);
+                    }
+
                 }
             }
-            orig(self, 0);
+            if (GS.punishment != Setting.PunishmentType.Die)
+            {
+                orig(self, geo);
+            }
+            else
+            {
+                orig(self, 0);
+            }
+
+
         }
 
-       public static Setting mysetting { get; set; } = new Setting();
-        public void OnLoadGlobal(Setting s) => mysetting = s;
-        public Setting OnSaveGlobal() => mysetting;
-        public void Unload()
-        {
-            ModHooks.NewGameHook -= NewStart;
-            ModHooks.AfterSavegameLoadHook -= Load;
-            ModHooks.BeforePlayerDeadHook -= Instance_BeforePlayerDeadHook;
-            On.GeoControl.OnTriggerEnter2D -= Col;
-            On.GeoCounter.AddGeo -= Death;
-            On.GeoControl.OnEnable -= GeoControl_OnEnable;
-            On.HealthManager.TakeDamage -= Count;
-        }
+       public static Setting GS { get; set; } = new Setting();
+        public void OnLoadGlobal(Setting s) => GS = s;
+        public Setting OnSaveGlobal() => GS;
         GameObject _smallGeo;
         int hitCount;
         int maxhit;

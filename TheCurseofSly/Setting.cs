@@ -7,7 +7,19 @@ namespace TheCurseofSly
 {
      public class Setting
     {
-        public bool IsHard = false;
-        public bool immediateltDie = true;
+        public enum Mode
+        {
+            Easy,
+            Hard,
+            None
+        }
+        public enum PunishmentType
+        {
+            Die,
+            Damage,
+            None
+        }
+        public Mode mode = Mode.Easy;
+        public PunishmentType punishment = PunishmentType.Die;
     }
 }
