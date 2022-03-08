@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Modding;
-namespace TheCurseofSly
+﻿namespace TheCurseofSly
 {
      public class Setting
     {
@@ -19,7 +14,13 @@ namespace TheCurseofSly
             Damage,
             None
         }
+        public enum SpawnGeo
+        {
+            Yes,
+            No,
+        }
         public Mode mode = Mode.Easy;
         public PunishmentType punishment = PunishmentType.Die;
+        public SpawnGeo spawn=SpawnGeo.Yes;
     }
 }

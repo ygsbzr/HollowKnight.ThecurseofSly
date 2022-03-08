@@ -9,10 +9,11 @@ namespace TheCurseofSly
 {
     public class CurseofSly:Mod,IGlobalSettings<Setting>,IMenuMod
     {
+
         public GameObject SmallGeo => UnityEngine.Object.Instantiate(_smallGeo);
         public override string GetVersion()
         {
-            return "2.1(FOR1.5)";
+            return "2.2";
         }
         public override void Initialize()
         {
@@ -49,6 +50,17 @@ namespace TheCurseofSly
                    Loader = () => (int)GS.punishment
                }
                );
+            menuEntries.Add(
+                new IMenuMod.MenuEntry
+                {
+                    Name="HitSpawnGeo?",
+                    Description="Whether hit enemy will spawn Geo",
+                    Values =Enum.GetNames(typeof(Setting.SpawnGeo)).ToArray(),
+                    Loader=()=>(int)GS.spawn,
+                    Saver=i=>GS.spawn=(Setting.SpawnGeo)i,
+                }
+                );
+            
             return menuEntries;
         }
 
@@ -140,6 +152,8 @@ namespace TheCurseofSly
         }
         private void SpawnGeo(Collider2D collider2D)
         {
+            if (GS.spawn == Setting.SpawnGeo.No)
+                return;
             GameObject smallPrefab = _smallGeo;
             UnityEngine.Object.Destroy(smallPrefab.Spawn());
             smallPrefab.SetActive(true);
@@ -166,13 +180,13 @@ namespace TheCurseofSly
                 }
                 if(GS.punishment==Setting.PunishmentType.Die)
                 {
-                    HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 9999, 0);
+                    HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 9999, 1);
                 }
                 else
                 {
                     if(GS.punishment==Setting.PunishmentType.Damage)
                     {
-                        HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 2, 0);
+                        HeroController.instance.TakeDamage(HeroController.instance.gameObject, CollisionSide.other, 1, 1);
                     }
                 }
                 
